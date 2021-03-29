@@ -1,9 +1,16 @@
 package com.example.places;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,11 +18,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 
-public class NewFragment extends Fragment implements View.OnClickListener{
-
-    //State
-
-    //
+public class NewFragment extends Fragment implements View.OnClickListener {
 
     // -------------------------------------
     // Views
@@ -25,12 +28,16 @@ public class NewFragment extends Fragment implements View.OnClickListener{
     private ImageView goToMapButton;
     private Button registerButton;
 
+    private OnMapPlaceLocation observer;
 
-    public NewFragment() {
-        // Required empty public constructor
+    public void setObserver(OnMapPlaceLocation observer) {
+        this.observer = observer;
     }
 
-    // TODO: Rename and change types and number of parameters
+    public NewFragment() {
+
+    }
+
     public static NewFragment newInstance() {
         NewFragment fragment = new NewFragment();
         Bundle args = new Bundle();
@@ -62,6 +69,40 @@ public class NewFragment extends Fragment implements View.OnClickListener{
         goToMapButton.setOnClickListener(this);
         registerButton.setOnClickListener(this);
 
+        goToMapButton.setAlpha(0.5f);
+        goToMapButton.setEnabled(false);
+
+        placeNameEditText.addTextChangedListener(
+                new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        String text = s.toString().trim();
+
+                        if(!text.equals("")) {
+
+                            goToMapButton.setAlpha(1f);
+                            goToMapButton.setEnabled(true);
+
+                        }else if(s.length()==0){
+
+                            goToMapButton.setAlpha(0.5f);
+                            goToMapButton.setEnabled(false);
+
+                        }
+                    }
+                }
+        );
+
 
         return root;
 
@@ -76,6 +117,8 @@ public class NewFragment extends Fragment implements View.OnClickListener{
 
             case R.id.goToMapButton:
 
+                    observer.onGoToMap();
+
                 break;
 
             case R.id.registerButton:
@@ -83,4 +126,37 @@ public class NewFragment extends Fragment implements View.OnClickListener{
                 break;
         }
     }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        String placeName = placeNameEditText.getText().toString();
+
+        if(placeName!=null){
+
+            SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
+            preferences.edit().putString("editText", placeName).apply();
+
+        }
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
+        String placeName = preferences.getString("editText", "NO_PLACE");
+
+        if(!placeName.equals("NO_PLACE")){
+            placeNameEditText.setText(placeName);
+        }
+    }
+
+    public interface OnMapPlaceLocation{
+        void onPlaceNameUpdate(String placeName);
+        void onGoToMap();
+    }
+
 }

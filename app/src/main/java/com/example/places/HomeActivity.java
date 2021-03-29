@@ -7,19 +7,21 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.view.MenuItem;
 
+import com.google.android.material.bottomnavigation.BottomNavigationItemView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.Map;
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity implements NewFragment.OnMapPlaceLocation{
 
     private MapsFragment mapsFragment;
     private NewFragment newFragment;
     private SearchFragment searchFragment;
     private BottomNavigationView navigator;
-
 
 
     @Override
@@ -32,6 +34,8 @@ public class HomeActivity extends AppCompatActivity {
         mapsFragment = new MapsFragment();
         newFragment = NewFragment.newInstance();
         searchFragment = SearchFragment.newInstance();
+
+        newFragment.setObserver(this);
 
         //Permissions request
         ActivityCompat.requestPermissions(this, new String[]{
@@ -75,4 +79,17 @@ public class HomeActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onPlaceNameUpdate(String placeName) {
+
+    }
+
+    @SuppressLint("RestrictedApi")
+    @Override
+    public void onGoToMap() {
+
+        navigator.setSelectedItemId(R.id.mapItem);
+        showFragment(mapsFragment);
+        mapsFragment.showOptions();
+    }
 }
