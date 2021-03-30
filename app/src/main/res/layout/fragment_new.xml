@@ -17,7 +17,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-      " />
+    " />
 
     <TextView
         android:id="@+id/textView2"
@@ -64,10 +64,10 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="32dp"
+        android:autofillHints="Lugar"
         android:ems="10"
         android:hint="@string/new__screen_hint"
         android:inputType="textPersonName"
-        android:autofillHints="Lugar"
         app:layout_constraintBottom_toTopOf="@+id/goToMapButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -107,5 +107,27 @@
         android:contentDescription="@string/new__screen_add_image"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView4" />
+
+    <TextView
+        android:id="@+id/addressTextView1"
+        style="@style/AppCuerpoText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="@string/new_screen_marker_text"
+        app:layout_constraintBottom_toTopOf="@+id/addressTextView"
+        app:layout_constraintStart_toEndOf="@+id/goToMapButton"
+        app:layout_constraintTop_toTopOf="@+id/goToMapButton"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <TextView
+        android:id="@+id/addressTextView"
+        style="@style/AppCuerpoSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/goToMapButton"
+        app:layout_constraintStart_toEndOf="@+id/goToMapButton"
+        app:layout_constraintTop_toBottomOf="@+id/addressTextView1" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

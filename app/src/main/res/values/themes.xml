@@ -78,4 +78,10 @@
         <item name="fontFamily">@font/arial_bold</item>
         <item name="android:textSize">12sp</item>
     </style>
+    <!-- CUERPO SUBTTILE -->
+    <style name="AppCuerpoSubtitle" parent="Widget.AppCompat.TextView">
+        <item name="fontFamily">@font/arial_regular</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/gray</item>
+    </style>
 </resources>

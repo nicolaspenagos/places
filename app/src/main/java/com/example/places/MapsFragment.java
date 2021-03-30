@@ -7,6 +7,8 @@ import androidx.fragment.app.Fragment;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -26,15 +28,34 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 import static android.location.LocationManager.*;
 
-public class MapsFragment extends Fragment implements LocationListener, OnMapReadyCallback, GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener, NewFragment.OnMapPlaceLocation {
+public class MapsFragment extends Fragment implements LocationListener, OnMapReadyCallback, GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener {
 
+    // -------------------------------------
+    // Maps assets
+    // -------------------------------------
     private LocationManager manager;
     private GoogleMap map;
-    private Marker placeMarker;
+    private Marker currentPlaceMarker;
+    private String currentPlaceName;
+    private ArrayList<Marker> markers;
 
-    private boolean isVisible;
+    // -------------------------------------
+    // Address assets
+    // -------------------------------------
+    private Geocoder geocoder;
+    private List<Address> addresses;
+
+    // -------------------------------------
+    // Observers
+    // -------------------------------------
+    private OnAddressSet addressObserver;
 
     // -------------------------------------
     // Views
@@ -43,6 +64,14 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     private Button cardButton;
     private TextView cardTextView;
 
+    // -------------------------------------
+    // Global variables
+    // -------------------------------------
+    private boolean isVisible;
+
+    // -------------------------------------
+    // UI Thread Methods
+    // -------------------------------------
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -54,7 +83,14 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         cardButton = root.findViewById(R.id.cardButton);
         cardTextView = root.findViewById(R.id.cardText);
 
+        bottomLayout.setOnClickListener(
+                (v)->{
+                    addressObserver.onAddressSet("Calle 35 A Norte #2bn-109");
 
+                }
+        );
+
+        geocoder = new Geocoder(getContext(), Locale.getDefault());
 
         if(!isVisible)
           bottomLayout.setVisibility(View.GONE);
@@ -78,6 +114,15 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         manager = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        isVisible = false;
+    }
+
+    // -------------------------------------
+    // Map Methods
+    // -------------------------------------
     @SuppressLint("MissingPermission")
     public void setInitialPos(){
 
@@ -131,11 +176,6 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
 
     }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-        isVisible = false;
-    }
 
     @Override
     public void onMapClick(LatLng latLng) {
@@ -146,24 +186,59 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     public void onMapLongClick(LatLng latLng) {
 
         ViewGroup.LayoutParams params = bottomLayout.getLayoutParams();
-
         bottomLayout.setLayoutParams(params);
         cardButton.setVisibility(View.VISIBLE);
 
+        if(currentPlaceMarker==null){
+            currentPlaceMarker = map.addMarker(new MarkerOptions().position(latLng));
+        }else{
+            currentPlaceMarker.setPosition(latLng);
+        }
+
+        if(currentPlaceMarker!=null){
+            currentPlaceMarker.setTitle(currentPlaceName);
+        }
+
+        new Thread(
+                ()->{
+
+                    try {
+
+                        addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
+                        addAddressToMarker(addresses.get(0).getAddressLine(0));
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+        ).start();
+
     }
 
-    @Override
-    public void onPlaceNameUpdate(String placeName) {
-
-    }
-
-    @Override
-    public void onGoToMap() {
-
-    }
-
+    // -------------------------------------
+    // Logic Methods
+    // -------------------------------------
     public void showOptions(){
-
         isVisible = true;
+    }
+
+    public void addAddressToMarker(String address){
+       getActivity().runOnUiThread(()->{ currentPlaceMarker.setSnippet(address);});
+    }
+
+    public void setCurrentPlaceName(String currentPlaceName) {
+        this.currentPlaceName = currentPlaceName;
+    }
+
+    public void setAddressObserver(OnAddressSet addressObserver) {
+        this.addressObserver = addressObserver;
+    }
+
+    // -------------------------------------
+    // Interfaces
+    // -------------------------------------
+    public interface OnAddressSet{
+        void onAddressSet(String address);
     }
 }

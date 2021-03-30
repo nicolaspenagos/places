@@ -17,8 +17,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 
-public class NewFragment extends Fragment implements View.OnClickListener {
+public class NewFragment extends Fragment implements View.OnClickListener, MapsFragment.OnAddressSet {
 
     // -------------------------------------
     // Views
@@ -27,6 +28,8 @@ public class NewFragment extends Fragment implements View.OnClickListener {
     private ImageView addImageButton;
     private ImageView goToMapButton;
     private Button registerButton;
+    private TextView addressTextView;
+    private TextView addressTextView1;
 
     private OnMapPlaceLocation observer;
 
@@ -64,6 +67,8 @@ public class NewFragment extends Fragment implements View.OnClickListener {
         addImageButton = root.findViewById(R.id.addImageButton);
         goToMapButton = root.findViewById(R.id.goToMapButton);
         registerButton = root.findViewById(R.id.registerButton);
+        addressTextView = root.findViewById(R.id.addressTextView);
+        addressTextView1 = root.findViewById(R.id.addressTextView1);
 
         addImageButton.setOnClickListener(this);
         goToMapButton.setOnClickListener(this);
@@ -118,6 +123,7 @@ public class NewFragment extends Fragment implements View.OnClickListener {
             case R.id.goToMapButton:
 
                     observer.onGoToMap();
+                    observer.onPlaceNameUpdate(placeNameEditText.getText().toString());
 
                 break;
 
@@ -152,6 +158,11 @@ public class NewFragment extends Fragment implements View.OnClickListener {
         if(!placeName.equals("NO_PLACE")){
             placeNameEditText.setText(placeName);
         }
+    }
+
+    @Override
+    public void onAddressSet(String address) {
+        addressTextView.setText(address);
     }
 
     public interface OnMapPlaceLocation{

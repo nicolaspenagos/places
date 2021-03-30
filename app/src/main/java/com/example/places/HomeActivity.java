@@ -9,6 +9,7 @@ import androidx.fragment.app.FragmentTransaction;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 
 import com.google.android.material.bottomnavigation.BottomNavigationItemView;
@@ -36,6 +37,7 @@ public class HomeActivity extends AppCompatActivity implements NewFragment.OnMap
         searchFragment = SearchFragment.newInstance();
 
         newFragment.setObserver(this);
+        mapsFragment.setAddressObserver(newFragment);
 
         //Permissions request
         ActivityCompat.requestPermissions(this, new String[]{
@@ -81,7 +83,7 @@ public class HomeActivity extends AppCompatActivity implements NewFragment.OnMap
 
     @Override
     public void onPlaceNameUpdate(String placeName) {
-
+        mapsFragment.setCurrentPlaceName(placeName);
     }
 
     @SuppressLint("RestrictedApi")
@@ -91,5 +93,7 @@ public class HomeActivity extends AppCompatActivity implements NewFragment.OnMap
         navigator.setSelectedItemId(R.id.mapItem);
         showFragment(mapsFragment);
         mapsFragment.showOptions();
+
+
     }
 }

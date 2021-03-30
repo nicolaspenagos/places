@@ -4,6 +4,7 @@
     <string name="new_screen_description">En esta sección puede inscribir un sitio de la cuidad. Nombre el lugar y luego con el bóton del mapa, seleccione un punto en el mapa,</string>
     <string name="new_screen_subititle_1">Datos</string>
     <string name="new_screen_subititle_2">Imagenes</string>
+    <string name="new_screen_marker_text">Dirección del sitio seleccionado</string>
     <string name="new_screen_buttom">Registrar</string>
     <string name="new__screen_hint">Nombre</string>
     <string name="new__screen_marker_image">Marker image</string>
