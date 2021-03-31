@@ -6,6 +6,7 @@
 
 package com.example.places;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
@@ -14,9 +15,11 @@ import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.example.places.interfaces.OnBottomNavigationBar;
 import com.google.android.material.bottomnavigation.BottomNavigationItemView;
@@ -28,6 +31,11 @@ import java.util.Map;
  * This is the main activity and hosts all the Fragments.
  */
 public class HomeActivity extends AppCompatActivity implements NewFragment.OnMapPlaceLocation, OnBottomNavigationBar {
+
+    // -------------------------------------
+    // Constants
+    // -------------------------------------
+    public final static int PERMISSIONS_CALLBACK = 11;
 
     // -------------------------------------
     // Fragments
@@ -65,7 +73,12 @@ public class HomeActivity extends AppCompatActivity implements NewFragment.OnMap
         //Permissions request
         ActivityCompat.requestPermissions(this, new String[]{
                 Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION}, 1
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.CAMERA,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                },
+                PERMISSIONS_CALLBACK
         );
 
         navigator.setOnNavigationItemSelectedListener(
@@ -94,6 +107,29 @@ public class HomeActivity extends AppCompatActivity implements NewFragment.OnMap
         showFragment(newFragment);
 
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if(requestCode == PERMISSIONS_CALLBACK){
+
+            boolean allGrant = true;
+            for (int i = 0; i<grantResults.length && allGrant; i++){
+                if(grantResults[i] == PackageManager.PERMISSION_DENIED){
+                    allGrant = false;
+                }
+            }
+
+            if(allGrant)
+                Toast.makeText(this, "Todos los permisos concedidos", Toast.LENGTH_LONG).show();
+            else
+                Toast.makeText(this, "Alerta!, no todos los permisos fueron concedidos", Toast.LENGTH_LONG).show();
+
+        }
+
+    }
+
 
     // -------------------------------------
     // Logic methods

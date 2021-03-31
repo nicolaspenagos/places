@@ -14,4 +14,6 @@
     <string name="menu_new">Nuevo</string>
     <string name="card_map_text">Sostenga el toque para ubicar el lugar del sitio de interés</string>
     <string name="card_button_text">Continuar</string>
+    <string name="allgrant">Todos los permisos concedidos</string>
+    <string name="no_allgrant">Alerta!, no todos los permisos fueron concedidos</string>
 </resources>

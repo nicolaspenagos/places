@@ -7,11 +7,19 @@
 package com.example.places;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -25,6 +33,8 @@ import android.widget.TextView;
 
 import com.example.places.interfaces.OnBottomNavigationBar;
 
+import java.io.File;
+
 /*
  * This is where the user is able to register a place.
  */
@@ -33,9 +43,16 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
     // -------------------------------------
     // Views
     // -------------------------------------
+    public final static int CAMERA_CALLBACK = 10;
+
+    // -------------------------------------
+    // Views
+    // -------------------------------------
     private EditText placeNameEditText;
-    private ImageView addImageButton;
+    private ImageView openGalleryButton;
     private ImageView goToMapButton;
+    private ImageView openCameraButton;
+    private ImageView placeImageView;
     private Button registerButton;
     private TextView addressTextView;
     private TextView addressTextViewTitle;
@@ -45,6 +62,7 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
     // -------------------------------------
     private boolean recentChange;
     private String currentAddress;
+    private File file;
 
     private OnMapPlaceLocation onMapPlaceLocationObserver;
     private OnBottomNavigationBar onBottomNavigationBarObserver;
@@ -82,18 +100,23 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
         View root = inflater.inflate(R.layout.fragment_new, container, false);
 
         placeNameEditText = root.findViewById(R.id.placeNameEditText);
-        addImageButton = root.findViewById(R.id.addImageButton);
+        openGalleryButton = root.findViewById(R.id.addImageButton);
         goToMapButton = root.findViewById(R.id.goToMapButton);
         registerButton = root.findViewById(R.id.registerButton);
         addressTextView = root.findViewById(R.id.addressTextView);
         addressTextViewTitle = root.findViewById(R.id.addressTitleTextView);
+        openCameraButton = root.findViewById(R.id.openCameraButton);
+        placeImageView = root.findViewById(R.id.placeImageView);
 
-        addImageButton.setOnClickListener(this);
+        openGalleryButton.setOnClickListener(this);
         goToMapButton.setOnClickListener(this);
         registerButton.setOnClickListener(this);
+        openCameraButton.setOnClickListener(this);
 
         goToMapButton.setAlpha(0.5f);
         goToMapButton.setEnabled(false);
+
+        placeImageView.setVisibility(View.INVISIBLE);
 
         if(recentChange){
 
@@ -147,6 +170,28 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode == CAMERA_CALLBACK && resultCode == getActivity().RESULT_OK){
+
+            Bitmap image = BitmapFactory.decodeFile(file.getPath());
+            Bitmap thumbnail = Bitmap.createScaledBitmap(
+                    image, image.getWidth()/12, image.getHeight()/12, true
+            );
+
+            Matrix matrix = new Matrix();
+            matrix.postRotate(90);
+            Bitmap rotatedBitmap = Bitmap.createBitmap(thumbnail, 0, 0, thumbnail.getWidth(), thumbnail.getHeight(), matrix, true);
+
+            placeImageView.setVisibility(View.VISIBLE);
+            placeImageView.setImageBitmap(rotatedBitmap);
+
+
+        }
+    }
+
+    @Override
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.addImageButton:
@@ -163,6 +208,16 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
             case R.id.registerButton:
 
                 break;
+
+            case R.id.openCameraButton:
+
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                file = new File( getActivity().getExternalFilesDir(null) + "/photo.png");
+                Uri uri = FileProvider.getUriForFile(getContext(), getActivity().getPackageName(), file);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                startActivityForResult(intent, CAMERA_CALLBACK);
+
+                break;
         }
     }
 
@@ -170,14 +225,15 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
     public void onPause() {
         super.onPause();
 
+        SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
         String placeName = placeNameEditText.getText().toString();
 
-        if(placeName!=null){
-
-            SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
+        if(placeName!=null)
             preferences.edit().putString("editText", placeName).apply();
 
-        }
+
+        if(currentAddress!=null && !currentAddress.equals(""))
+            preferences.edit().putString("address", currentAddress).apply();
 
     }
 
@@ -187,9 +243,22 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
         SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
         String placeName = preferences.getString("editText", "NO_PLACE");
+        String placeAddress = preferences.getString("address", "NO_ADDRESS");
+
 
         if(!placeName.equals("NO_PLACE")){
             placeNameEditText.setText(placeName);
+        }
+        if(!placeAddress.equals("NO_ADDRESS")){
+
+            currentAddress = placeAddress;
+            addressTextView.setText(currentAddress);
+            addressTextViewTitle.setVisibility(View.VISIBLE);
+
+            if(!currentAddress.equals("")){
+                addressTextViewTitle.setVisibility(View.INVISIBLE);
+            }
+
         }
     }
 
