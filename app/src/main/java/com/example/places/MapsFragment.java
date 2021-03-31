@@ -1,3 +1,9 @@
+/* * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * @author Nicolás Penagos Montoya
+ * nicolas.penagosm98@gmail.com
+ * * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ */
+
 package com.example.places;
 
 import androidx.annotation.NonNull;
@@ -20,6 +26,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.example.places.interfaces.OnBottomNavigationBar;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -35,6 +42,9 @@ import java.util.Locale;
 
 import static android.location.LocationManager.*;
 
+/*
+ * This is the map and its features.
+ */
 public class MapsFragment extends Fragment implements LocationListener, OnMapReadyCallback, GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener {
 
     // -------------------------------------
@@ -56,6 +66,8 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     // Observers
     // -------------------------------------
     private OnAddressSet addressObserver;
+    private OnBottomNavigationBar onBottomNavigationBarObserver;
+
 
     // -------------------------------------
     // Views
@@ -83,9 +95,12 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         cardButton = root.findViewById(R.id.cardButton);
         cardTextView = root.findViewById(R.id.cardText);
 
-        bottomLayout.setOnClickListener(
+        cardButton.setOnClickListener(
                 (v)->{
-                    addressObserver.onAddressSet("Calle 35 A Norte #2bn-109");
+
+                    addressObserver.onAddressSet(addresses.get(0).getAddressLine(0));
+                    onBottomNavigationBarObserver.goToNew();
+
 
                 }
         );
@@ -116,8 +131,10 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
 
     @Override
     public void onStop() {
+
         super.onStop();
         isVisible = false;
+
     }
 
     // -------------------------------------
@@ -168,11 +185,11 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         map.setMyLocationEnabled(true);
         setInitialPos();
         manager.requestLocationUpdates(GPS_PROVIDER, 1000, 2, (LocationListener) this);
+        currentPlaceMarker = null;
 
         //Map listeners
         map.setOnMapClickListener(this);
         map.setOnMapLongClickListener(this);
-
 
     }
 
@@ -205,13 +222,22 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
                     try {
 
                         addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
-                        addAddressToMarker(addresses.get(0).getAddressLine(0));
+                        String address = addresses.get(0).getAddressLine(0);
+
+                        getActivity().runOnUiThread(()->{
+
+                            currentPlaceMarker.hideInfoWindow();
+                            currentPlaceMarker.setSnippet(address);
+                            currentPlaceMarker.showInfoWindow();
+
+                        });
 
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
 
                 }
+
         ).start();
 
     }
@@ -235,10 +261,26 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         this.addressObserver = addressObserver;
     }
 
+
+
     // -------------------------------------
     // Interfaces
     // -------------------------------------
     public interface OnAddressSet{
         void onAddressSet(String address);
     }
+
+    // -------------------------------------
+    // Getters and setters
+    // -------------------------------------
+    public OnBottomNavigationBar getOnBottomNavigationBarObserver() {
+        return onBottomNavigationBarObserver;
+    }
+
+    public void setOnBottomNavigationBarObserver(OnBottomNavigationBar onBottomNavigationBar) {
+        this.onBottomNavigationBarObserver = onBottomNavigationBar;
+    }
+
+
+
 }

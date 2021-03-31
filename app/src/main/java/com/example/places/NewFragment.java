@@ -1,3 +1,9 @@
+/* * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * @author Nicolás Penagos Montoya
+ * nicolas.penagosm98@gmail.com
+ * * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ */
+
 package com.example.places;
 
 import android.content.Context;
@@ -5,8 +11,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -19,6 +23,11 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.places.interfaces.OnBottomNavigationBar;
+
+/*
+ * This is where the user is able to register a place.
+ */
 public class NewFragment extends Fragment implements View.OnClickListener, MapsFragment.OnAddressSet {
 
     // -------------------------------------
@@ -29,12 +38,19 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
     private ImageView goToMapButton;
     private Button registerButton;
     private TextView addressTextView;
-    private TextView addressTextView1;
+    private TextView addressTextViewTitle;
 
-    private OnMapPlaceLocation observer;
+    // -------------------------------------
+    // Global variables
+    // -------------------------------------
+    private boolean recentChange;
+    private String currentAddress;
 
-    public void setObserver(OnMapPlaceLocation observer) {
-        this.observer = observer;
+    private OnMapPlaceLocation onMapPlaceLocationObserver;
+    private OnBottomNavigationBar onBottomNavigationBarObserver;
+
+    public void setOnMapPlaceLocationObserver(OnMapPlaceLocation observer) {
+        this.onMapPlaceLocationObserver = observer;
     }
 
     public NewFragment() {
@@ -42,10 +58,12 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
     }
 
     public static NewFragment newInstance() {
+
         NewFragment fragment = new NewFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
+
     }
 
     @Override
@@ -68,7 +86,7 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
         goToMapButton = root.findViewById(R.id.goToMapButton);
         registerButton = root.findViewById(R.id.registerButton);
         addressTextView = root.findViewById(R.id.addressTextView);
-        addressTextView1 = root.findViewById(R.id.addressTextView1);
+        addressTextViewTitle = root.findViewById(R.id.addressTitleTextView);
 
         addImageButton.setOnClickListener(this);
         goToMapButton.setOnClickListener(this);
@@ -76,6 +94,20 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
         goToMapButton.setAlpha(0.5f);
         goToMapButton.setEnabled(false);
+
+        if(recentChange){
+
+            addressTextViewTitle.setVisibility(View.VISIBLE);
+            addressTextView.setText(currentAddress);
+            recentChange = false;
+
+        }else{
+
+            addressTextViewTitle.setVisibility(View.INVISIBLE);
+            addressTextView.setText("");
+
+        }
+       //
 
         placeNameEditText.addTextChangedListener(
                 new TextWatcher() {
@@ -109,6 +141,7 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
         );
 
 
+        Log.e(">>>", "Holi");
         return root;
 
     }
@@ -122,8 +155,8 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
             case R.id.goToMapButton:
 
-                    observer.onGoToMap();
-                    observer.onPlaceNameUpdate(placeNameEditText.getText().toString());
+                    onMapPlaceLocationObserver.onPlaceNameUpdate(placeNameEditText.getText().toString());
+                    onBottomNavigationBarObserver.goToMap();
 
                 break;
 
@@ -162,12 +195,22 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
     @Override
     public void onAddressSet(String address) {
-        addressTextView.setText(address);
+
+        recentChange = true;
+        currentAddress = address;
+
+    }
+
+    public OnBottomNavigationBar getOnBottomNavigationBarObserver() {
+        return onBottomNavigationBarObserver;
+    }
+
+    public void setOnBottomNavigationBarObserver(OnBottomNavigationBar onBottomNavigationBarObserver) {
+        this.onBottomNavigationBarObserver = onBottomNavigationBarObserver;
     }
 
     public interface OnMapPlaceLocation{
         void onPlaceNameUpdate(String placeName);
-        void onGoToMap();
     }
 
 }

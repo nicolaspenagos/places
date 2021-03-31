@@ -109,7 +109,7 @@
         app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
     <TextView
-        android:id="@+id/addressTextView1"
+        android:id="@+id/addressTitleTextView"
         style="@style/AppCuerpoText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -128,6 +128,6 @@
         android:layout_marginStart="8dp"
         app:layout_constraintBottom_toBottomOf="@+id/goToMapButton"
         app:layout_constraintStart_toEndOf="@+id/goToMapButton"
-        app:layout_constraintTop_toBottomOf="@+id/addressTextView1" />
+        app:layout_constraintTop_toBottomOf="@+id/addressTitleTextView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
