@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -32,6 +33,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.places.interfaces.OnBottomNavigationBar;
+import com.example.places.util.UtilDomi;
+import com.google.gson.Gson;
 
 import java.io.File;
 
@@ -41,9 +44,17 @@ import java.io.File;
 public class NewFragment extends Fragment implements View.OnClickListener, MapsFragment.OnAddressSet {
 
     // -------------------------------------
+    // Constants
+    // -------------------------------------
+    public final static int LOADED_FROM_CAMERA = 1;
+    public final static int LOADED_FROM_GALLERY = 2;
+    public final static int NO_LOADED = 0;
+
+    // -------------------------------------
     // Views
     // -------------------------------------
     public final static int CAMERA_CALLBACK = 10;
+    public final static int GALLERY_CALLBACK = 11;
 
     // -------------------------------------
     // Views
@@ -63,6 +74,15 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
     private boolean recentChange;
     private String currentAddress;
     private File file;
+    private boolean placeNameOk;
+    private boolean addressOk;
+    private boolean imageOk;
+    private boolean imageFromGallery;
+    private Gson gson;
+    private Bitmap currentImage;
+    private Uri uri;
+    private int imageLoaded;
+
 
     private OnMapPlaceLocation onMapPlaceLocationObserver;
     private OnBottomNavigationBar onBottomNavigationBarObserver;
@@ -116,7 +136,12 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
         goToMapButton.setAlpha(0.5f);
         goToMapButton.setEnabled(false);
 
-        placeImageView.setVisibility(View.INVISIBLE);
+        placeNameOk = false;
+        addressOk =  false;
+
+        gson =  new Gson();
+
+
 
         if(recentChange){
 
@@ -152,19 +177,19 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
                             goToMapButton.setAlpha(1f);
                             goToMapButton.setEnabled(true);
+                            placeNameOk = true;
 
                         }else if(s.length()==0){
 
                             goToMapButton.setAlpha(0.5f);
                             goToMapButton.setEnabled(false);
+                            placeNameOk = false;
 
                         }
                     }
                 }
         );
 
-
-        Log.e(">>>", "Holi");
         return root;
 
     }
@@ -174,20 +199,9 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
         super.onActivityResult(requestCode, resultCode, data);
 
         if(requestCode == CAMERA_CALLBACK && resultCode == getActivity().RESULT_OK){
-
-            Bitmap image = BitmapFactory.decodeFile(file.getPath());
-            Bitmap thumbnail = Bitmap.createScaledBitmap(
-                    image, image.getWidth()/12, image.getHeight()/12, true
-            );
-
-            Matrix matrix = new Matrix();
-            matrix.postRotate(90);
-            Bitmap rotatedBitmap = Bitmap.createBitmap(thumbnail, 0, 0, thumbnail.getWidth(), thumbnail.getHeight(), matrix, true);
-
-            placeImageView.setVisibility(View.VISIBLE);
-            placeImageView.setImageBitmap(rotatedBitmap);
-
-
+              createImage();
+        }else if(requestCode == GALLERY_CALLBACK && resultCode == getActivity().RESULT_OK){
+            loadImage(data.getData());
         }
     }
 
@@ -195,6 +209,12 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.addImageButton:
+
+                imageFromGallery = true;
+                Intent j = new Intent(Intent.ACTION_GET_CONTENT);
+                j.setType("image/*");
+                startActivityForResult(j, GALLERY_CALLBACK);
+
 
                 break;
 
@@ -211,11 +231,11 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
             case R.id.openCameraButton:
 
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 file = new File( getActivity().getExternalFilesDir(null) + "/photo.png");
                 Uri uri = FileProvider.getUriForFile(getContext(), getActivity().getPackageName(), file);
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-                startActivityForResult(intent, CAMERA_CALLBACK);
+                i.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                startActivityForResult(i, CAMERA_CALLBACK);
 
                 break;
         }
@@ -235,6 +255,19 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
         if(currentAddress!=null && !currentAddress.equals(""))
             preferences.edit().putString("address", currentAddress).apply();
 
+
+        preferences.edit().putBoolean("loadImage", imageOk).apply();
+
+        if(file!=null){
+
+            String jsonFile = gson.toJson(file);
+            preferences.edit().putString("file", jsonFile).apply();
+
+        }
+
+
+
+
     }
 
     @Override
@@ -242,24 +275,58 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
         super.onResume();
 
         SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
+        String bitmapJson = preferences.getString("bitmap", "NO_BITMAP");
         String placeName = preferences.getString("editText", "NO_PLACE");
         String placeAddress = preferences.getString("address", "NO_ADDRESS");
 
+        int loadedIndex =  preferences.getInt("loadedIndex", NO_LOADED);
+
+        if(loadedIndex == LOADED_FROM_CAMERA){
+
+            String fileJson = preferences.getString("file", "NO_FILE");
+
+            if(!fileJson.equals("NO_FILE")){
+
+                file = gson.fromJson(fileJson, File.class);
+                createImage();
+
+            }
+
+        }else if(loadedIndex == LOADED_FROM_GALLERY){
+
+            String uriJson = preferences.getString("uri", "NO_URI");
+
+            if(!uriJson.equals("NO_URI")){
+            //  loadImage(gson.fromJson(uriJson, Uri.class));
+            }
+
+        }
+
 
         if(!placeName.equals("NO_PLACE")){
+
             placeNameEditText.setText(placeName);
+            placeNameOk = true;
+
         }
         if(!placeAddress.equals("NO_ADDRESS")){
 
             currentAddress = placeAddress;
             addressTextView.setText(currentAddress);
             addressTextViewTitle.setVisibility(View.VISIBLE);
+            addressOk = true;
 
             if(!currentAddress.equals("")){
+
                 addressTextViewTitle.setVisibility(View.INVISIBLE);
+                addressOk = false;
+
             }
 
         }
+
+
+
     }
 
     @Override
@@ -281,5 +348,48 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
     public interface OnMapPlaceLocation{
         void onPlaceNameUpdate(String placeName);
     }
+
+    public void createImage(){
+
+        Bitmap image = BitmapFactory.decodeFile(file.getPath());
+        currentImage = rotateBitmap(scaleBitmap(image));
+        placeImageView.setImageBitmap(currentImage);
+        imageOk = true;
+
+        SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
+        preferences.edit().putInt("loadedIndex", LOADED_FROM_CAMERA).apply();
+        preferences.edit().putString("file", gson.toJson(file)).apply();
+
+    }
+
+
+    public void loadImage(Uri uri){
+
+        String path = UtilDomi.getPath(getContext(), uri);
+        Bitmap image = BitmapFactory.decodeFile(path);
+        currentImage = rotateBitmap(scaleBitmap(image));
+        placeImageView.setImageBitmap(currentImage);
+        imageOk = true;
+
+        SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
+        preferences.edit().putInt("loadedIndex", LOADED_FROM_GALLERY).apply();
+        preferences.edit().putString("uri", gson.toJson(uri)).apply();
+
+    }
+
+    public Bitmap scaleBitmap(Bitmap image){
+        return  Bitmap.createScaledBitmap(
+                image, image.getWidth()/12, image.getHeight()/12, true
+        );
+    }
+
+    public Bitmap rotateBitmap(Bitmap thumbnail){
+
+        Matrix matrix = new Matrix();
+        matrix.postRotate(90);
+        return Bitmap.createBitmap(thumbnail, 0, 0, thumbnail.getWidth(), thumbnail.getHeight(), matrix, true);
+
+    }
+
 
 }

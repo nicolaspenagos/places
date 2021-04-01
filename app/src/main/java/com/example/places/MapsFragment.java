@@ -144,7 +144,6 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     public void setInitialPos(){
 
         Location location = manager.getLastKnownLocation(GPS_PROVIDER);
-
         if(location!=null){
 
             LatLng myPos = new LatLng(location.getLatitude(), location.getLongitude());
@@ -183,13 +182,14 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
 
         map = googleMap;
         map.setMyLocationEnabled(true);
-        setInitialPos();
         manager.requestLocationUpdates(GPS_PROVIDER, 1000, 2, (LocationListener) this);
         currentPlaceMarker = null;
 
         //Map listeners
         map.setOnMapClickListener(this);
         map.setOnMapLongClickListener(this);
+
+        setInitialPos();
 
     }
 
