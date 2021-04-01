@@ -122,9 +122,9 @@ public class HomeActivity extends AppCompatActivity implements NewFragment.OnMap
             }
 
             if(allGrant)
-                Toast.makeText(this, "Todos los permisos concedidos", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.allgrant, Toast.LENGTH_LONG).show();
             else
-                Toast.makeText(this, "Alerta!, no todos los permisos fueron concedidos", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.no_allgrant, Toast.LENGTH_LONG).show();
 
         }
 

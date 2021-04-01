@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -99,8 +100,9 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
                 (v)->{
 
                     addressObserver.onAddressSet(addresses.get(0).getAddressLine(0));
+                    SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
+                    preferences.edit().putString("address", addresses.get(0).getAddressLine(0)).apply();
                     onBottomNavigationBarObserver.goToNew();
-
 
                 }
         );

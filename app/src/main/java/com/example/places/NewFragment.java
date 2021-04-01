@@ -31,6 +31,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.places.interfaces.OnBottomNavigationBar;
 import com.example.places.util.UtilDomi;
@@ -45,13 +46,6 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
     // -------------------------------------
     // Constants
-    // -------------------------------------
-    public final static int LOADED_FROM_CAMERA = 1;
-    public final static int LOADED_FROM_GALLERY = 2;
-    public final static int NO_LOADED = 0;
-
-    // -------------------------------------
-    // Views
     // -------------------------------------
     public final static int CAMERA_CALLBACK = 10;
     public final static int GALLERY_CALLBACK = 11;
@@ -74,23 +68,21 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
     private boolean recentChange;
     private String currentAddress;
     private File file;
+    private Gson gson;
     private boolean placeNameOk;
     private boolean addressOk;
     private boolean imageOk;
-    private boolean imageFromGallery;
-    private Gson gson;
-    private Bitmap currentImage;
-    private Uri uri;
-    private int imageLoaded;
+    private SharedPreferences preferences;
 
-
+    // -------------------------------------
+    // Observer pattern
+    // -------------------------------------
     private OnMapPlaceLocation onMapPlaceLocationObserver;
     private OnBottomNavigationBar onBottomNavigationBarObserver;
 
-    public void setOnMapPlaceLocationObserver(OnMapPlaceLocation observer) {
-        this.onMapPlaceLocationObserver = observer;
-    }
-
+    // -------------------------------------
+    // Constructor
+    // -------------------------------------
     public NewFragment() {
 
     }
@@ -104,6 +96,9 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
     }
 
+    // -------------------------------------
+    // UI Thread Methods
+    // -------------------------------------
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -138,10 +133,10 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
         placeNameOk = false;
         addressOk =  false;
+        imageOk = false;
 
         gson =  new Gson();
-
-
+        preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
 
         if(recentChange){
 
@@ -155,7 +150,6 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
             addressTextView.setText("");
 
         }
-       //
 
         placeNameEditText.addTextChangedListener(
                 new TextWatcher() {
@@ -199,22 +193,21 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
         super.onActivityResult(requestCode, resultCode, data);
 
         if(requestCode == CAMERA_CALLBACK && resultCode == getActivity().RESULT_OK){
-              createImage();
+              createImage(file.getPath());
         }else if(requestCode == GALLERY_CALLBACK && resultCode == getActivity().RESULT_OK){
-            loadImage(data.getData());
+            createImage(UtilDomi.getPath(getContext(), data.getData()));
         }
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()){
+
             case R.id.addImageButton:
 
-                imageFromGallery = true;
                 Intent j = new Intent(Intent.ACTION_GET_CONTENT);
                 j.setType("image/*");
                 startActivityForResult(j, GALLERY_CALLBACK);
-
 
                 break;
 
@@ -226,6 +219,12 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
                 break;
 
             case R.id.registerButton:
+
+                if(imageOk && addressOk && placeNameOk){
+
+                }else{
+                    Toast.makeText(getContext(), R.string.toast_fill_all, Toast.LENGTH_LONG).show();
+                }
 
                 break;
 
@@ -245,7 +244,6 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
     public void onPause() {
         super.onPause();
 
-        SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
         String placeName = placeNameEditText.getText().toString();
 
         if(placeName!=null)
@@ -255,9 +253,6 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
         if(currentAddress!=null && !currentAddress.equals(""))
             preferences.edit().putString("address", currentAddress).apply();
 
-
-        preferences.edit().putBoolean("loadImage", imageOk).apply();
-
         if(file!=null){
 
             String jsonFile = gson.toJson(file);
@@ -265,43 +260,19 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
         }
 
-
-
-
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
-        String bitmapJson = preferences.getString("bitmap", "NO_BITMAP");
         String placeName = preferences.getString("editText", "NO_PLACE");
         String placeAddress = preferences.getString("address", "NO_ADDRESS");
+        String path =  preferences.getString("path", "NO_PATH");
 
-        int loadedIndex =  preferences.getInt("loadedIndex", NO_LOADED);
-
-        if(loadedIndex == LOADED_FROM_CAMERA){
-
-            String fileJson = preferences.getString("file", "NO_FILE");
-
-            if(!fileJson.equals("NO_FILE")){
-
-                file = gson.fromJson(fileJson, File.class);
-                createImage();
-
-            }
-
-        }else if(loadedIndex == LOADED_FROM_GALLERY){
-
-            String uriJson = preferences.getString("uri", "NO_URI");
-
-            if(!uriJson.equals("NO_URI")){
-            //  loadImage(gson.fromJson(uriJson, Uri.class));
-            }
-
+        if(!path.equals("NO_PATH")){
+            createImage(path);
         }
-
 
         if(!placeName.equals("NO_PLACE")){
 
@@ -316,19 +287,14 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
             addressTextViewTitle.setVisibility(View.VISIBLE);
             addressOk = true;
 
-            if(!currentAddress.equals("")){
-
-                addressTextViewTitle.setVisibility(View.INVISIBLE);
-                addressOk = false;
-
-            }
 
         }
 
-
-
     }
 
+    // -------------------------------------
+    // Logic Methods
+    // -------------------------------------
     @Override
     public void onAddressSet(String address) {
 
@@ -337,43 +303,17 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
     }
 
-    public OnBottomNavigationBar getOnBottomNavigationBarObserver() {
-        return onBottomNavigationBarObserver;
-    }
-
-    public void setOnBottomNavigationBarObserver(OnBottomNavigationBar onBottomNavigationBarObserver) {
-        this.onBottomNavigationBarObserver = onBottomNavigationBarObserver;
-    }
-
     public interface OnMapPlaceLocation{
         void onPlaceNameUpdate(String placeName);
     }
 
-    public void createImage(){
+    public void createImage(String path){
 
-        Bitmap image = BitmapFactory.decodeFile(file.getPath());
-        currentImage = rotateBitmap(scaleBitmap(image));
-        placeImageView.setImageBitmap(currentImage);
-        imageOk = true;
-
-        SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
-        preferences.edit().putInt("loadedIndex", LOADED_FROM_CAMERA).apply();
-        preferences.edit().putString("file", gson.toJson(file)).apply();
-
-    }
-
-
-    public void loadImage(Uri uri){
-
-        String path = UtilDomi.getPath(getContext(), uri);
         Bitmap image = BitmapFactory.decodeFile(path);
-        currentImage = rotateBitmap(scaleBitmap(image));
-        placeImageView.setImageBitmap(currentImage);
-        imageOk = true;
-
+        placeImageView.setImageBitmap(rotateBitmap(scaleBitmap(image)));
         SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
-        preferences.edit().putInt("loadedIndex", LOADED_FROM_GALLERY).apply();
-        preferences.edit().putString("uri", gson.toJson(uri)).apply();
+        preferences.edit().putString("path", path).apply();
+        imageOk = true;
 
     }
 
@@ -389,6 +329,21 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
         matrix.postRotate(90);
         return Bitmap.createBitmap(thumbnail, 0, 0, thumbnail.getWidth(), thumbnail.getHeight(), matrix, true);
 
+    }
+
+    // -------------------------------------
+    // Getters and setters
+    // -------------------------------------
+    public void setOnMapPlaceLocationObserver(OnMapPlaceLocation observer) {
+        this.onMapPlaceLocationObserver = observer;
+    }
+
+    public OnBottomNavigationBar getOnBottomNavigationBarObserver() {
+        return onBottomNavigationBarObserver;
+    }
+
+    public void setOnBottomNavigationBarObserver(OnBottomNavigationBar onBottomNavigationBarObserver) {
+        this.onBottomNavigationBarObserver = onBottomNavigationBarObserver;
     }
 
 
