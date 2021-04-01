@@ -231,6 +231,7 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
                             currentPlaceMarker.hideInfoWindow();
                             currentPlaceMarker.setSnippet(address);
                             currentPlaceMarker.showInfoWindow();
+                            addressObserver.onMarkerSet(currentPlaceMarker);
 
                         });
 
@@ -269,8 +270,12 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     // Interfaces
     // -------------------------------------
     public interface OnAddressSet{
+
         void onAddressSet(String address);
+        void onMarkerSet(Marker marker);
+
     }
+
 
     // -------------------------------------
     // Getters and setters

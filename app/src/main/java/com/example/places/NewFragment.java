@@ -34,10 +34,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.places.interfaces.OnBottomNavigationBar;
+import com.example.places.model.Place;
 import com.example.places.util.UtilDomi;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.gson.Gson;
 
 import java.io.File;
+import java.util.ArrayList;
 
 /*
  * This is where the user is able to register a place.
@@ -73,6 +77,9 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
     private boolean addressOk;
     private boolean imageOk;
     private SharedPreferences preferences;
+    private LatLng currentMarkerLatLng;
+    private ArrayList<Place> places;
+    private String path;
 
     // -------------------------------------
     // Observer pattern
@@ -137,6 +144,15 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
         gson =  new Gson();
         preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
+
+        String placesJson = preferences.getString("places", "NO_PLACES");
+        if(!placesJson.equals("NO_PLACES")){
+            places = gson.fromJson(placesJson, ArrayList.class);
+        }else{
+            places = new ArrayList<Place>();
+        }
+
+
 
         if(recentChange){
 
@@ -222,6 +238,12 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
                 if(imageOk && addressOk && placeNameOk){
 
+                    Place place = new Place(placeNameEditText.getText().toString(), currentAddress, path, currentMarkerLatLng);
+                    places.add(place);
+                    String jsonPlaces = gson.toJson(places);
+                    preferences.edit().putString("places", jsonPlaces).apply();
+                    emptyData();
+
                 }else{
                     Toast.makeText(getContext(), R.string.toast_fill_all, Toast.LENGTH_LONG).show();
                 }
@@ -303,6 +325,11 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
     }
 
+    @Override
+    public void onMarkerSet(Marker marker) {
+        currentMarkerLatLng = marker.getPosition();
+    }
+
     public interface OnMapPlaceLocation{
         void onPlaceNameUpdate(String placeName);
     }
@@ -313,6 +340,7 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
         placeImageView.setImageBitmap(rotateBitmap(scaleBitmap(image)));
         SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
         preferences.edit().putString("path", path).apply();
+        this.path = path;
         imageOk = true;
 
     }
@@ -328,6 +356,27 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
         Matrix matrix = new Matrix();
         matrix.postRotate(90);
         return Bitmap.createBitmap(thumbnail, 0, 0, thumbnail.getWidth(), thumbnail.getHeight(), matrix, true);
+
+    }
+
+    public void emptyData(){
+
+        imageOk = false;
+        addressOk = false;
+        placeNameOk = false;
+
+        currentMarkerLatLng = null;
+        currentAddress = "";
+        placeNameEditText.setText("");
+        placeImageView.setImageDrawable(null);
+
+        addressTextView.setText("");
+        addressTextViewTitle.setVisibility(View.INVISIBLE);
+
+        preferences.edit().putString("address", "NO_ADDRESS").apply();
+        preferences.edit().putString("path", "NO_PATH").apply();
+        preferences.edit().putString("editText", "NO_PLACE").apply();
+
 
     }
 
