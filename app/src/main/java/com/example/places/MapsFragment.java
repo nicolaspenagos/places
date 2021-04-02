@@ -28,6 +28,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.places.interfaces.OnBottomNavigationBar;
+import com.example.places.model.Place;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -35,6 +36,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,6 +58,12 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     private Marker currentPlaceMarker;
     private String currentPlaceName;
     private ArrayList<Marker> markers;
+
+    // -------------------------------------
+    // Global Variables
+    // -------------------------------------
+    private SharedPreferences preferences;
+    private Gson gson;
 
     // -------------------------------------
     // Address assets
@@ -113,6 +121,10 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
           bottomLayout.setVisibility(View.GONE);
 
         cardButton.setVisibility(View.GONE);
+
+        preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
+
+        gson = new Gson();
 
         return root;
 
@@ -192,6 +204,19 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         map.setOnMapLongClickListener(this);
 
         setInitialPos();
+
+        String placesJson = preferences.getString("places", "NO_PLACES");
+        Place[] places= gson.fromJson(placesJson, Place[].class);
+
+        for (int i=0; i<places.length; i++){
+            
+            Place currentPlace = places[i];
+            Marker marker = map.addMarker(new MarkerOptions().position(currentPlace.getMarker()));
+            marker.setTitle(currentPlace.getName());
+            marker.setSnippet(currentPlace.getAddress());
+
+        }
+
 
     }
 

@@ -152,8 +152,6 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
             places = new ArrayList<Place>();
         }
 
-
-
         if(recentChange){
 
             addressTextViewTitle.setVisibility(View.VISIBLE);
@@ -394,6 +392,5 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
     public void setOnBottomNavigationBarObserver(OnBottomNavigationBar onBottomNavigationBarObserver) {
         this.onBottomNavigationBarObserver = onBottomNavigationBarObserver;
     }
-
-
+    
 }
