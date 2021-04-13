@@ -59,8 +59,8 @@
        <item name="iconTint">@color/yellow</item>
     </style>
     <!-- BOTTOM LAYOUT -->
-    <style name="AppBottomLayout">
-        <item name="android:background">@drawable/bottom_layout_background</item>
+    <style name="AppTopLayout">
+        <item name="android:background">@drawable/top_layout_background</item>
     </style>
     <!-- CARD TEXT -->
     <style name="AppCardText" parent="Widget.AppCompat.TextView">
@@ -83,5 +83,21 @@
         <item name="fontFamily">@font/arial_regular</item>
         <item name="android:textSize">16sp</item>
         <item name="android:textColor">@color/gray</item>
+    </style>
+    <!-- TOP LAYOUT -->
+    <style name="AppBottomLayout">
+        <item name="android:background">@drawable/bottom_layout_background</item>
+    </style>
+    <!-- DARK SUBTITLE -->
+    <style name="AppDarkSubtitle">
+        <item name="fontFamily">@font/arial_bold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+    <!-- DARK CUERPO -->
+    <style name="AppDarkCuerpo">
+        <item name="fontFamily">@font/arial_regular</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/white</item>
     </style>
 </resources>

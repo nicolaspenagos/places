@@ -17,4 +17,5 @@
     <string name="allgrant">Todos los permisos concedidos</string>
     <string name="no_allgrant">Alerta!, no todos los permisos fueron concedidos</string>
     <string name="toast_fill_all">Por favor complete todos los campos para registrar.</string>
+    <string name="rate_button">Calificar</string>
 </resources>

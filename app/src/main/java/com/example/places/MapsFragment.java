@@ -14,18 +14,20 @@ import androidx.fragment.app.Fragment;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.places.interfaces.OnBottomNavigationBar;
 import com.example.places.model.Place;
@@ -37,6 +39,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
+import com.google.maps.android.SphericalUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,7 +51,7 @@ import static android.location.LocationManager.*;
 /*
  * This is the map and its features.
  */
-public class MapsFragment extends Fragment implements LocationListener, OnMapReadyCallback, GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener {
+public class MapsFragment extends Fragment implements LocationListener, OnMapReadyCallback, GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener, View.OnClickListener {
 
     // -------------------------------------
     // Maps assets
@@ -64,6 +67,7 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     // -------------------------------------
     private SharedPreferences preferences;
     private Gson gson;
+    private Place[] places;
 
     // -------------------------------------
     // Address assets
@@ -81,9 +85,19 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     // -------------------------------------
     // Views
     // -------------------------------------
+    private ConstraintLayout topLayout;
     private ConstraintLayout bottomLayout;
     private Button cardButton;
     private TextView cardTextView;
+    private TextView placeTextView;
+    private TextView placeAddressTextView;
+    private Button rateButton;
+    private ImageView star1ImageView;
+    private ImageView star2ImageView;
+    private ImageView star3ImageView;
+    private ImageView star4ImageView;
+    private ImageView star5ImageView;
+
 
     // -------------------------------------
     // Global variables
@@ -100,25 +114,30 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
                              @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_maps, container, false);
 
+        topLayout = root.findViewById(R.id.topLayout);
         bottomLayout = root.findViewById(R.id.bottomLayout);
         cardButton = root.findViewById(R.id.cardButton);
         cardTextView = root.findViewById(R.id.cardText);
+        placeTextView = root.findViewById(R.id.placeCardTitle);
+        placeAddressTextView =  root.findViewById(R.id.placeCardAddress);
+        rateButton = root.findViewById(R.id.rateButton);
+        star1ImageView = root.findViewById(R.id.star1ImageView);
+        star2ImageView = root.findViewById(R.id.star2ImageView);
+        star3ImageView = root.findViewById(R.id.star3ImageView);
+        star4ImageView = root.findViewById(R.id.star4ImageView);
+        star5ImageView = root.findViewById(R.id.star5ImageView);
 
-        cardButton.setOnClickListener(
-                (v)->{
-
-                    addressObserver.onAddressSet(addresses.get(0).getAddressLine(0));
-                    SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
-                    preferences.edit().putString("address", addresses.get(0).getAddressLine(0)).apply();
-                    onBottomNavigationBarObserver.goToNew();
-
-                }
-        );
+        cardButton.setOnClickListener(this);
+        star1ImageView.setOnClickListener(this);
+        star2ImageView.setOnClickListener(this);
+        star3ImageView.setOnClickListener(this);
+        star4ImageView.setOnClickListener(this);
+        star5ImageView.setOnClickListener(this);
 
         geocoder = new Geocoder(getContext(), Locale.getDefault());
 
         if(!isVisible)
-          bottomLayout.setVisibility(View.GONE);
+          topLayout.setVisibility(View.GONE);
 
         cardButton.setVisibility(View.GONE);
 
@@ -171,6 +190,21 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     @Override
     public void onLocationChanged(@NonNull Location location) {
 
+        getActivity().runOnUiThread(()->Toast.makeText(getContext(), ""+location.getLatitude() + " " +location.getLongitude(), Toast.LENGTH_SHORT).show());
+
+        for (int i=0; i<places.length; i++){
+
+            LatLng from = new LatLng(location.getLatitude(), location.getLongitude());
+            LatLng to = new LatLng(places[i].getMarker().latitude, places[i].getMarker().longitude);
+
+            double distanceInMeters = SphericalUtil.computeDistanceBetween(from, to);
+
+            if(distanceInMeters<100){
+
+            }
+
+
+        }
 
     }
 
@@ -206,7 +240,7 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         setInitialPos();
 
         String placesJson = preferences.getString("places", "NO_PLACES");
-        Place[] places= gson.fromJson(placesJson, Place[].class);
+        places= gson.fromJson(placesJson, Place[].class);
 
         for (int i=0; i<places.length; i++){
             
@@ -216,7 +250,6 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
             marker.setSnippet(currentPlace.getAddress());
 
         }
-
 
     }
 
@@ -229,8 +262,8 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     @Override
     public void onMapLongClick(LatLng latLng) {
 
-        ViewGroup.LayoutParams params = bottomLayout.getLayoutParams();
-        bottomLayout.setLayoutParams(params);
+        ViewGroup.LayoutParams params = topLayout.getLayoutParams();
+        topLayout.setLayoutParams(params);
         cardButton.setVisibility(View.VISIBLE);
 
         if(currentPlaceMarker==null){
@@ -289,6 +322,78 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         this.addressObserver = addressObserver;
     }
 
+    @Override
+    public void onClick(View v) {
+
+        switch (v.getId()){
+
+            case R.id.cardButton:
+
+                addressObserver.onAddressSet(addresses.get(0).getAddressLine(0));
+                SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
+                preferences.edit().putString("address", addresses.get(0).getAddressLine(0)).apply();
+                onBottomNavigationBarObserver.goToNew();
+
+                break;
+
+            case R.id.rateButton:
+
+
+
+                break;
+
+            case R.id.star1ImageView:
+
+                    star1ImageView.setImageResource(R.drawable.pressed_star);
+                    star2ImageView.setImageResource(R.drawable.star);
+                    star3ImageView.setImageResource(R.drawable.star);
+                    star4ImageView.setImageResource(R.drawable.star);
+                    star5ImageView.setImageResource(R.drawable.star);
+
+                break;
+
+            case R.id.star2ImageView:
+
+                star1ImageView.setImageResource(R.drawable.pressed_star);
+                star2ImageView.setImageResource(R.drawable.pressed_star);
+                star3ImageView.setImageResource(R.drawable.star);
+                star4ImageView.setImageResource(R.drawable.star);
+                star5ImageView.setImageResource(R.drawable.star);
+
+                break;
+
+            case R.id.star3ImageView:
+
+                star1ImageView.setImageResource(R.drawable.pressed_star);
+                star2ImageView.setImageResource(R.drawable.pressed_star);
+                star3ImageView.setImageResource(R.drawable.pressed_star);
+                star4ImageView.setImageResource(R.drawable.star);
+                star5ImageView.setImageResource(R.drawable.star);
+
+                break;
+
+            case R.id.star4ImageView:
+
+                star1ImageView.setImageResource(R.drawable.pressed_star);
+                star2ImageView.setImageResource(R.drawable.pressed_star);
+                star3ImageView.setImageResource(R.drawable.pressed_star);
+                star4ImageView.setImageResource(R.drawable.pressed_star);
+                star5ImageView.setImageResource(R.drawable.star);
+
+                break;
+
+            case R.id.star5ImageView:
+
+                star1ImageView.setImageResource(R.drawable.pressed_star);
+                star2ImageView.setImageResource(R.drawable.pressed_star);
+                star3ImageView.setImageResource(R.drawable.pressed_star);
+                star4ImageView.setImageResource(R.drawable.pressed_star);
+                star5ImageView.setImageResource(R.drawable.pressed_star);
+
+                break;
+        }
+
+    }
 
 
     // -------------------------------------

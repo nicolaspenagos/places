@@ -56,7 +56,7 @@
     </style>
     <!-- BOTTOM LAYOUT -->
     <style name="AppBottomLayout">
-        <item name="android:background">@drawable/bottom_layout_background</item>
+        <item name="android:background">@drawable/top_layout_background</item>
     </style>
     <!-- CARD TEXT -->
     <style name="AppCardText" parent="Widget.AppCompat.TextView">
