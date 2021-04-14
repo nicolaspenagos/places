@@ -21,6 +21,7 @@ public class Place {
     private String address;
     private String path;
     private LatLng marker;
+    private boolean rated;
 
     // -------------------------------------
     // Constructor
@@ -34,6 +35,7 @@ public class Place {
         this.address = address;
         this.path = path;
         this.marker = marker;
+        this.rated = false;
     }
 
     // -------------------------------------
@@ -71,4 +73,11 @@ public class Place {
         this.marker = marker;
     }
 
+    public boolean isRated() {
+        return rated;
+    }
+
+    public void setRated(boolean rated) {
+        this.rated = rated;
+    }
 }

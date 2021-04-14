@@ -36,6 +36,7 @@ import android.widget.Toast;
 import com.example.places.interfaces.OnBottomNavigationBar;
 import com.example.places.model.Place;
 import com.example.places.util.UtilDomi;
+import com.example.places.util.UtilImage;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.gson.Gson;
@@ -237,7 +238,7 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
                 if(imageOk && addressOk && placeNameOk){
 
                     Place place = new Place(placeNameEditText.getText().toString(), currentAddress, path, currentMarkerLatLng);
-                    places.add(place);
+                    places.add(place);;
                     String jsonPlaces = gson.toJson(places);
                     preferences.edit().putString("places", jsonPlaces).apply();
                     emptyData();
@@ -335,25 +336,11 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
     public void createImage(String path){
 
         Bitmap image = BitmapFactory.decodeFile(path);
-        placeImageView.setImageBitmap(rotateBitmap(scaleBitmap(image)));
+        placeImageView.setImageBitmap(UtilImage.rotateBitmap(UtilImage.scaleBitmap(image)));
         SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
         preferences.edit().putString("path", path).apply();
         this.path = path;
         imageOk = true;
-
-    }
-
-    public Bitmap scaleBitmap(Bitmap image){
-        return  Bitmap.createScaledBitmap(
-                image, image.getWidth()/12, image.getHeight()/12, true
-        );
-    }
-
-    public Bitmap rotateBitmap(Bitmap thumbnail){
-
-        Matrix matrix = new Matrix();
-        matrix.postRotate(90);
-        return Bitmap.createBitmap(thumbnail, 0, 0, thumbnail.getWidth(), thumbnail.getHeight(), matrix, true);
 
     }
 

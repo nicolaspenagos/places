@@ -100,7 +100,7 @@
             app:srcCompat="@drawable/star" />
 
         <ImageView
-            android:id="@+id/imageView6"
+            android:id="@+id/closePlaceImageView"
             android:layout_width="90dp"
             android:layout_height="90dp"
             android:layout_marginTop="24dp"

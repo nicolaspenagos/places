@@ -31,6 +31,7 @@ import android.widget.Toast;
 
 import com.example.places.interfaces.OnBottomNavigationBar;
 import com.example.places.model.Place;
+import com.example.places.util.UtilImage;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -68,6 +69,8 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     private SharedPreferences preferences;
     private Gson gson;
     private Place[] places;
+    private boolean onRating;
+    private Place ratePlace;
 
     // -------------------------------------
     // Address assets
@@ -97,12 +100,14 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     private ImageView star3ImageView;
     private ImageView star4ImageView;
     private ImageView star5ImageView;
+    private ImageView closePlaceImageView;
 
 
     // -------------------------------------
     // Global variables
     // -------------------------------------
     private boolean isVisible;
+    private boolean allowMarkers;
 
     // -------------------------------------
     // UI Thread Methods
@@ -126,6 +131,7 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         star3ImageView = root.findViewById(R.id.star3ImageView);
         star4ImageView = root.findViewById(R.id.star4ImageView);
         star5ImageView = root.findViewById(R.id.star5ImageView);
+        closePlaceImageView = root.findViewById(R.id.closePlaceImageView);
 
         cardButton.setOnClickListener(this);
         star1ImageView.setOnClickListener(this);
@@ -133,13 +139,16 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         star3ImageView.setOnClickListener(this);
         star4ImageView.setOnClickListener(this);
         star5ImageView.setOnClickListener(this);
+        rateButton.setOnClickListener(this);
 
         geocoder = new Geocoder(getContext(), Locale.getDefault());
+        onRating = false;
 
         if(!isVisible)
           topLayout.setVisibility(View.GONE);
 
         cardButton.setVisibility(View.GONE);
+        bottomLayout.setVisibility(View.GONE);
 
         preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
 
@@ -167,6 +176,7 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
 
         super.onStop();
         isVisible = false;
+        allowMarkers = false;
 
     }
 
@@ -190,21 +200,46 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     @Override
     public void onLocationChanged(@NonNull Location location) {
 
-        getActivity().runOnUiThread(()->Toast.makeText(getContext(), ""+location.getLatitude() + " " +location.getLongitude(), Toast.LENGTH_SHORT).show());
 
-        for (int i=0; i<places.length; i++){
 
-            LatLng from = new LatLng(location.getLatitude(), location.getLongitude());
-            LatLng to = new LatLng(places[i].getMarker().latitude, places[i].getMarker().longitude);
+           ratePlace = null;
+            double minDistance = Double.POSITIVE_INFINITY;
 
-            double distanceInMeters = SphericalUtil.computeDistanceBetween(from, to);
+            for (int i=0; i<places.length; i++){
 
-            if(distanceInMeters<100){
+                LatLng from = new LatLng(location.getLatitude(), location.getLongitude());
+                LatLng to = new LatLng(places[i].getMarker().latitude, places[i].getMarker().longitude);
+
+
+                double distanceInMeters = SphericalUtil.computeDistanceBetween(from, to);
+
+
+                if(distanceInMeters<100){
+                    if(distanceInMeters<minDistance && ! places[i].isRated()){
+
+                        ratePlace = places[i];
+                        minDistance = distanceInMeters;
+                        Place finalRatePlace = ratePlace;
+                        getActivity().runOnUiThread(()->Toast.makeText(getContext(), finalRatePlace.getName()+" "+distanceInMeters, Toast.LENGTH_SHORT).show());
+
+                    }
+
+                }
+
 
             }
 
 
-        }
+
+
+            if(ratePlace!=null){
+
+                bottomLayout.setVisibility(View.VISIBLE);
+                placeTextView.setText(ratePlace.getName());
+                placeAddressTextView.setText(ratePlace.getAddress());
+                closePlaceImageView.setImageBitmap(UtilImage.createImageFromPath(ratePlace.getPath()));
+
+            }
 
     }
 
@@ -262,44 +297,48 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     @Override
     public void onMapLongClick(LatLng latLng) {
 
-        ViewGroup.LayoutParams params = topLayout.getLayoutParams();
-        topLayout.setLayoutParams(params);
-        cardButton.setVisibility(View.VISIBLE);
+        if(allowMarkers){
 
-        if(currentPlaceMarker==null){
-            currentPlaceMarker = map.addMarker(new MarkerOptions().position(latLng));
-        }else{
-            currentPlaceMarker.setPosition(latLng);
-        }
+            ViewGroup.LayoutParams params = topLayout.getLayoutParams();
+            topLayout.setLayoutParams(params);
+            cardButton.setVisibility(View.VISIBLE);
 
-        if(currentPlaceMarker!=null){
-            currentPlaceMarker.setTitle(currentPlaceName);
-        }
+            if(currentPlaceMarker==null){
+                currentPlaceMarker = map.addMarker(new MarkerOptions().position(latLng));
+            }else{
+                currentPlaceMarker.setPosition(latLng);
+            }
 
-        new Thread(
-                ()->{
+            if(currentPlaceMarker!=null){
+                currentPlaceMarker.setTitle(currentPlaceName);
+            }
 
-                    try {
+            new Thread(
+                    ()->{
 
-                        addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
-                        String address = addresses.get(0).getAddressLine(0);
+                        try {
 
-                        getActivity().runOnUiThread(()->{
+                            addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
+                            String address = addresses.get(0).getAddressLine(0);
 
-                            currentPlaceMarker.hideInfoWindow();
-                            currentPlaceMarker.setSnippet(address);
-                            currentPlaceMarker.showInfoWindow();
-                            addressObserver.onMarkerSet(currentPlaceMarker);
+                            getActivity().runOnUiThread(()->{
 
-                        });
+                                currentPlaceMarker.hideInfoWindow();
+                                currentPlaceMarker.setSnippet(address);
+                                currentPlaceMarker.showInfoWindow();
+                                addressObserver.onMarkerSet(currentPlaceMarker);
 
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                            });
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
                     }
 
-                }
+            ).start();
 
-        ).start();
+        }
 
     }
 
@@ -315,6 +354,7 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     }
 
     public void setCurrentPlaceName(String currentPlaceName) {
+        allowMarkers = true;
         this.currentPlaceName = currentPlaceName;
     }
 
@@ -338,6 +378,14 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
 
             case R.id.rateButton:
 
+                onRating = false;
+                ratePlace.setRated(true);
+
+                String jsonPlaces = gson.toJson(places);
+                ratePlace.setRated(true);
+                preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
+                preferences.edit().putString("places", jsonPlaces).apply();
+                bottomLayout.setVisibility(View.GONE);
 
 
                 break;
@@ -391,6 +439,8 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
                 star5ImageView.setImageResource(R.drawable.pressed_star);
 
                 break;
+
+
         }
 
     }
