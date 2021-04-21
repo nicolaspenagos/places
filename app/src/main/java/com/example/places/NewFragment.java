@@ -120,6 +120,8 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
                              Bundle savedInstanceState) {
 
         // Inflate the layout for this fragment
+
+
         View root = inflater.inflate(R.layout.fragment_new, container, false);
 
         placeNameEditText = root.findViewById(R.id.placeNameEditText);
@@ -145,6 +147,8 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
         gson =  new Gson();
         preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
+
+
 
         String placesJson = preferences.getString("places", "NO_PLACES");
         if(!placesJson.equals("NO_PLACES")){
@@ -238,7 +242,7 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
                 if(imageOk && addressOk && placeNameOk){
 
                     Place place = new Place(placeNameEditText.getText().toString(), currentAddress, path, currentMarkerLatLng);
-                    places.add(place);;
+                    places.add(place);
                     String jsonPlaces = gson.toJson(places);
                     preferences.edit().putString("places", jsonPlaces).apply();
                     emptyData();
