@@ -23,6 +23,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
+            android:contentDescription="@string/place"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -33,6 +34,7 @@
             android:layout_width="25dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
+            android:contentDescription="@string/eye"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -46,7 +48,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
-            android:text="TextView"
             app:layout_constraintStart_toEndOf="@+id/placePicImageView"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -56,7 +57,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:text="TextView"
             android:textSize="16sp"
             app:layout_constraintStart_toEndOf="@+id/placePicImageView"
             app:layout_constraintTop_toBottomOf="@+id/placeListNameTextView" />
@@ -64,6 +64,7 @@
         <ImageView
             android:layout_width="20dp"
             android:layout_height="20dp"
+            android:contentDescription="@string/star"
             app:layout_constraintBottom_toBottomOf="@+id/placeStarsListTextView"
             app:layout_constraintStart_toEndOf="@+id/placeStarsListTextView"
             app:layout_constraintTop_toTopOf="@+id/placeStarsListTextView"
@@ -89,7 +90,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="1dp"
             android:layout_marginBottom="1dp"
-            android:text="TextView"
+            android:text="@string/distance"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

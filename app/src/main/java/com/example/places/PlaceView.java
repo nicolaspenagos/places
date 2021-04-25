@@ -28,6 +28,8 @@ public class PlaceView extends RecyclerView.ViewHolder {
         distanceTextView = root.findViewById(R.id.distanceTextView);
 
 
+
+
     }
 
     public ConstraintLayout getRoot() {

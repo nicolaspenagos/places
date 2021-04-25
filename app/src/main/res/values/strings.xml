@@ -18,4 +18,8 @@
     <string name="no_allgrant">Alerta!, no todos los permisos fueron concedidos</string>
     <string name="toast_fill_all">Por favor complete todos los campos para registrar.</string>
     <string name="rate_button">Calificar</string>
+    <string name="distance">Cargando...</string>
+    <string name="eye">Ojo</string>
+    <string name="place">Lugar</string>
+    <string name="star">Estrella</string>
 </resources>

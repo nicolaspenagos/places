@@ -8,12 +8,33 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.places.interfaces.OnBottomNavigationBar;
 import com.example.places.model.Place;
 import com.example.places.util.UtilImage;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
 
 public class PlaceAdapter extends RecyclerView.Adapter<PlaceView> {
+
+    public void setOnGoToPlaceObserver(OnGoToPlace onGoToPlaceObserver) {
+        this.onGoToPlaceObserver = onGoToPlaceObserver;
+    }
+
+    public OnBottomNavigationBar getOnBottomNavigationBarObserver() {
+        return onBottomNavigationBarObserver;
+    }
+
+    public void setOnBottomNavigationBarObserver(OnBottomNavigationBar onBottomNavigationBarObserver) {
+        this.onBottomNavigationBarObserver = onBottomNavigationBarObserver;
+    }
+
+    public interface OnGoToPlace{
+        void goToPlace(LatLng latLng);
+    }
+
+    private OnGoToPlace onGoToPlaceObserver;
+    private OnBottomNavigationBar onBottomNavigationBarObserver;
 
     private ArrayList<Place> places;
 
@@ -28,6 +49,10 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceView> {
 
     }
 
+    public void update(){
+        this.notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public PlaceView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -37,6 +62,8 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceView> {
         View row = inflater.inflate(R.layout.placerow, parent, false);
         ConstraintLayout rowRoot = (ConstraintLayout) row;
         PlaceView placeView = new PlaceView(rowRoot);
+
+
 
 
         return placeView;
@@ -49,7 +76,22 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceView> {
 
         holder.getPlaceNameTextView().setText(place.getName());
         holder.getPlacePicImageView().setImageBitmap(UtilImage.createImageFromPath(place.getPath()));
-        holder.getStarsTextView().setText("5");
+        String rate = "Sin calificar aún";
+        if(place.getRate()>0){
+            rate = ""+place.getRate();
+        }
+        holder.getStarsTextView().setText(rate);
+
+        if(places.get(position).getDistanceTo()!=-1)
+            holder.getDistanceTextView().setText(""+place.getDistanceTo()+" m");
+        else{
+            holder.getDistanceTextView().setText(R.string.distance);
+        }
+
+        holder.getEyeListImageView().setOnClickListener((v)->{
+            onGoToPlaceObserver.goToPlace(place.getMarker());
+            onBottomNavigationBarObserver.goToMap(false);
+        });
 
     }
 

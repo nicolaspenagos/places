@@ -67,7 +67,9 @@ public class HomeActivity extends AppCompatActivity implements NewFragment.OnMap
         newFragment.setOnBottomNavigationBarObserver(this);
         mapsFragment.setOnBottomNavigationBarObserver(this);
         searchFragment.setOnBottomNavigationBarObserver(this);
+        mapsFragment.setOnLocationChangedObserver(searchFragment);
         mapsFragment.setAddressObserver(newFragment);
+        searchFragment.getAdapter().setOnGoToPlaceObserver(mapsFragment);
 
 
         //Permissions request
@@ -152,11 +154,14 @@ public class HomeActivity extends AppCompatActivity implements NewFragment.OnMap
 
 
     @Override
-    public void goToMap() {
+    public void goToMap(boolean newPlace) {
 
         navigator.setSelectedItemId(R.id.mapItem);
+        mapsFragment.setShowRate(false);
         showFragment(mapsFragment);
+        if(newPlace)
         mapsFragment.showOptions();
+
 
     }
 

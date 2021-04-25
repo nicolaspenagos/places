@@ -8,25 +8,38 @@ package com.example.places;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.example.places.interfaces.OnBottomNavigationBar;
 import com.example.places.model.Place;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.gson.Gson;
+import com.google.maps.android.SphericalUtil;
 
 /*
  * This is the list that contains all the pre-registered places.
  */
-public class SearchFragment extends Fragment {
+public class SearchFragment extends Fragment implements MapsFragment.OnLocationChanged{
+
+
+
+
 
     // -------------------------------------
     // Views
@@ -37,17 +50,27 @@ public class SearchFragment extends Fragment {
     private PlaceAdapter adapter;
 
 
+    // -------------------------------------
+    // Global Variables
+    // -------------------------------------
+    private Place[] places;
+
+
+
 
     private OnBottomNavigationBar onBottomNavigationBarObserver;
 
     public SearchFragment() {
         // Required empty public constructor
+        adapter = new PlaceAdapter();
+
     }
 
     public static SearchFragment newInstance() {
         SearchFragment fragment = new SearchFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
+
         return fragment;
     }
 
@@ -70,14 +93,15 @@ public class SearchFragment extends Fragment {
 
         layoutManager = new LinearLayoutManager(getContext());
         placesViewList.setLayoutManager(layoutManager);
-        adapter = new PlaceAdapter();
+
         placesViewList.setAdapter(adapter);
 
         SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
         Gson gson = new Gson();
 
         String placesJson = preferences.getString("places", "NO_PLACES");
-        Place[] places= gson.fromJson(placesJson, Place[].class);
+
+        places= gson.fromJson(placesJson, Place[].class);
 
         for (int i = 0; i<places.length; i++){
             adapter.addPlace(places[i]);
@@ -92,5 +116,38 @@ public class SearchFragment extends Fragment {
 
     public void setOnBottomNavigationBarObserver(OnBottomNavigationBar onBottomNavigationBarObserver) {
         this.onBottomNavigationBarObserver = onBottomNavigationBarObserver;
+        adapter.setOnBottomNavigationBarObserver(onBottomNavigationBarObserver);
     }
+
+
+    @Override
+    public void onLocationChanged(Location location) {
+
+
+
+        if(places!=null){
+            for (Place place : places) {
+
+                LatLng from = new LatLng(location.getLatitude(), location.getLongitude());
+                LatLng to = new LatLng(place.getMarker().latitude, place.getMarker().longitude);
+
+                double distanceInMeters = SphericalUtil.computeDistanceBetween(from, to);
+
+                place.setDistanceTo(Math.round((float) distanceInMeters));
+
+
+            }
+
+            adapter.update();
+
+        }
+
+    }
+
+    public PlaceAdapter getAdapter(){
+        return adapter;
+    }
+
+
+
 }

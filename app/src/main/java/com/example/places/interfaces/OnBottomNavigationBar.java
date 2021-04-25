@@ -11,7 +11,7 @@ package com.example.places.interfaces;
  */
 public interface OnBottomNavigationBar {
 
-    void goToMap();
+    void goToMap(boolean newPlace);
     void goToNew();
     void goToSearch();
 

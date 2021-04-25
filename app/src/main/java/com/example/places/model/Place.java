@@ -9,6 +9,8 @@ package com.example.places.model;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
+import java.util.ArrayList;
+
 /*
  * This is the class that models a place;
  */
@@ -22,6 +24,9 @@ public class Place {
     private String path;
     private LatLng marker;
     private boolean rated;
+    private int distanceTo;
+    private int rateSum;
+    private int rateCounter;
 
     // -------------------------------------
     // Constructor
@@ -36,6 +41,26 @@ public class Place {
         this.path = path;
         this.marker = marker;
         this.rated = false;
+        this.distanceTo = -1;
+        this.rateSum = 0;
+        this.rateCounter = 0;
+    }
+
+    public void addRate(int rate){
+
+        rateSum += rate;
+        rateCounter++;
+    }
+
+    public double getRate(){
+
+        if(rateCounter==0){
+            return -1.0;
+        }
+
+        double average = ((double)rateSum)/((double)rateCounter);
+        return Math.round(average*100.0)/100.0;
+
     }
 
     // -------------------------------------
@@ -79,5 +104,13 @@ public class Place {
 
     public void setRated(boolean rated) {
         this.rated = rated;
+    }
+
+    public int getDistanceTo() {
+        return distanceTo;
+    }
+
+    public void setDistanceTo(int distanceTo) {
+        this.distanceTo = distanceTo;
     }
 }

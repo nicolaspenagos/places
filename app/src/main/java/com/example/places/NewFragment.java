@@ -95,6 +95,9 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
     }
 
+
+
+
     public static NewFragment newInstance() {
 
         NewFragment fragment = new NewFragment();
@@ -233,7 +236,7 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
             case R.id.goToMapButton:
 
                     onMapPlaceLocationObserver.onPlaceNameUpdate(placeNameEditText.getText().toString());
-                    onBottomNavigationBarObserver.goToMap();
+                    onBottomNavigationBarObserver.goToMap(true);
 
                 break;
 

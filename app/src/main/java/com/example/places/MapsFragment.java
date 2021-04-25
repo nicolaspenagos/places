@@ -21,6 +21,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -52,7 +53,7 @@ import static android.location.LocationManager.*;
 /*
  * This is the map and its features.
  */
-public class MapsFragment extends Fragment implements LocationListener, OnMapReadyCallback, GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener, View.OnClickListener {
+public class MapsFragment extends Fragment implements LocationListener, OnMapReadyCallback, GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener, View.OnClickListener, PlaceAdapter.OnGoToPlace{
 
     // -------------------------------------
     // Maps assets
@@ -62,6 +63,7 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     private Marker currentPlaceMarker;
     private String currentPlaceName;
     private ArrayList<Marker> markers;
+    private LatLng openHere;
 
     // -------------------------------------
     // Global Variables
@@ -71,6 +73,11 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     private Place[] places;
     private boolean onRating;
     private Place ratePlace;
+    private boolean availableGPS;
+    private boolean availableNetwork;
+    private String provider;
+    private int currentRate;
+    private boolean showRate;
 
     // -------------------------------------
     // Address assets
@@ -83,6 +90,7 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     // -------------------------------------
     private OnAddressSet addressObserver;
     private OnBottomNavigationBar onBottomNavigationBarObserver;
+    private OnLocationChanged onLocationChangedObserver;
 
 
     // -------------------------------------
@@ -101,6 +109,11 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     private ImageView star4ImageView;
     private ImageView star5ImageView;
     private ImageView closePlaceImageView;
+
+    public MapsFragment(){
+        super();
+        showRate = true;
+    }
 
 
     // -------------------------------------
@@ -133,6 +146,8 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         star5ImageView = root.findViewById(R.id.star5ImageView);
         closePlaceImageView = root.findViewById(R.id.closePlaceImageView);
 
+
+
         cardButton.setOnClickListener(this);
         star1ImageView.setOnClickListener(this);
         star2ImageView.setOnClickListener(this);
@@ -143,6 +158,10 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
 
         geocoder = new Geocoder(getContext(), Locale.getDefault());
         onRating = false;
+        currentRate = -1;
+        rateButton.setEnabled(false);
+        rateButton.setAlpha(0.5f);
+
 
         if(!isVisible)
           topLayout.setVisibility(View.GONE);
@@ -177,6 +196,17 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         super.onStop();
         isVisible = false;
         allowMarkers = false;
+        showRate = true;
+
+        if(places!=null){
+            for (int i=0;i<places.length;i++){
+                places[i].setRated(false);
+            }
+        }
+
+        String jsonPlaces = gson.toJson(places);
+        preferences.edit().putString("places", jsonPlaces).apply();
+
 
     }
 
@@ -186,13 +216,39 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     @SuppressLint("MissingPermission")
     public void setInitialPos(){
 
-        Location location = manager.getLastKnownLocation(GPS_PROVIDER);
-        if(location!=null){
 
-            LatLng myPos = new LatLng(location.getLatitude(), location.getLongitude());
-            map.animateCamera(CameraUpdateFactory.newLatLngZoom(myPos, 16));
-
+        //Determina si el NETWORK_PROVIDER esta disponible:
+        try {
+            availableNetwork = manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            provider = LocationManager.NETWORK_PROVIDER;
+        } catch (Exception ex) {
+            Log.e(">>>>","Error obtaining NETWORK_PROVIDER.");
         }
+
+
+        //Determina si el GPS_PROVIDER esta disponible:
+        try {
+            availableGPS = manager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            provider = LocationManager.GPS_PROVIDER;
+        } catch (Exception ex) {
+            Log.e(">>>>","Error obtaining GPS_PROVIDER.");
+        }
+
+
+        Location location = manager.getLastKnownLocation(provider);
+
+        if(openHere!=null){
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(openHere, 16));
+            openHere = null;
+        }else{
+            if(location!=null){
+
+                LatLng myPos = new LatLng(location.getLatitude(), location.getLongitude());
+                map.animateCamera(CameraUpdateFactory.newLatLngZoom(myPos, 16));
+
+            }
+        }
+
 
     }
 
@@ -200,9 +256,9 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     @Override
     public void onLocationChanged(@NonNull Location location) {
 
+            onLocationChangedObserver.onLocationChanged(location);
 
-
-           ratePlace = null;
+            ratePlace = null;
             double minDistance = Double.POSITIVE_INFINITY;
 
             for (int i=0; i<places.length; i++){
@@ -220,7 +276,7 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
                         ratePlace = places[i];
                         minDistance = distanceInMeters;
                         Place finalRatePlace = ratePlace;
-                        getActivity().runOnUiThread(()->Toast.makeText(getContext(), finalRatePlace.getName()+" "+distanceInMeters, Toast.LENGTH_SHORT).show());
+
 
                     }
 
@@ -231,15 +287,17 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
 
 
 
+            if(showRate){
+                if(ratePlace!=null){
 
-            if(ratePlace!=null){
+                    bottomLayout.setVisibility(View.VISIBLE);
+                    placeTextView.setText(ratePlace.getName());
+                    placeAddressTextView.setText(ratePlace.getAddress());
+                    closePlaceImageView.setImageBitmap(UtilImage.createImageFromPath(ratePlace.getPath()));
 
-                bottomLayout.setVisibility(View.VISIBLE);
-                placeTextView.setText(ratePlace.getName());
-                placeAddressTextView.setText(ratePlace.getAddress());
-                closePlaceImageView.setImageBitmap(UtilImage.createImageFromPath(ratePlace.getPath()));
-
+                }
             }
+
 
     }
 
@@ -383,66 +441,88 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
 
                 String jsonPlaces = gson.toJson(places);
                 ratePlace.setRated(true);
+                ratePlace.addRate(currentRate);
                 preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
                 preferences.edit().putString("places", jsonPlaces).apply();
                 bottomLayout.setVisibility(View.GONE);
+                currentRate = -1;
 
 
                 break;
 
             case R.id.star1ImageView:
 
+                    currentRate = 1;
                     star1ImageView.setImageResource(R.drawable.pressed_star);
                     star2ImageView.setImageResource(R.drawable.star);
                     star3ImageView.setImageResource(R.drawable.star);
                     star4ImageView.setImageResource(R.drawable.star);
                     star5ImageView.setImageResource(R.drawable.star);
+                    rateButton.setEnabled(true);
+                    rateButton.setAlpha(1f);
 
                 break;
 
             case R.id.star2ImageView:
 
+                currentRate = 2;
                 star1ImageView.setImageResource(R.drawable.pressed_star);
                 star2ImageView.setImageResource(R.drawable.pressed_star);
                 star3ImageView.setImageResource(R.drawable.star);
                 star4ImageView.setImageResource(R.drawable.star);
                 star5ImageView.setImageResource(R.drawable.star);
+                rateButton.setEnabled(true);
+                rateButton.setAlpha(1f);
 
                 break;
 
             case R.id.star3ImageView:
 
+                currentRate = 3;
                 star1ImageView.setImageResource(R.drawable.pressed_star);
                 star2ImageView.setImageResource(R.drawable.pressed_star);
                 star3ImageView.setImageResource(R.drawable.pressed_star);
                 star4ImageView.setImageResource(R.drawable.star);
                 star5ImageView.setImageResource(R.drawable.star);
+                rateButton.setEnabled(true);
+                rateButton.setAlpha(1f);
 
                 break;
 
             case R.id.star4ImageView:
 
+                currentRate = 4;
                 star1ImageView.setImageResource(R.drawable.pressed_star);
                 star2ImageView.setImageResource(R.drawable.pressed_star);
                 star3ImageView.setImageResource(R.drawable.pressed_star);
                 star4ImageView.setImageResource(R.drawable.pressed_star);
                 star5ImageView.setImageResource(R.drawable.star);
+                rateButton.setEnabled(true);
+                rateButton.setAlpha(1f);
 
                 break;
 
             case R.id.star5ImageView:
 
+                currentRate = 5;
                 star1ImageView.setImageResource(R.drawable.pressed_star);
                 star2ImageView.setImageResource(R.drawable.pressed_star);
                 star3ImageView.setImageResource(R.drawable.pressed_star);
                 star4ImageView.setImageResource(R.drawable.pressed_star);
                 star5ImageView.setImageResource(R.drawable.pressed_star);
+                rateButton.setEnabled(true);
+                rateButton.setAlpha(1f);
 
                 break;
 
 
         }
 
+    }
+
+    @Override
+    public void goToPlace(LatLng latLng) {
+        openHere = latLng;
     }
 
 
@@ -457,6 +537,12 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     }
 
 
+
+    public interface OnLocationChanged{
+        void onLocationChanged(Location location);
+    }
+
+
     // -------------------------------------
     // Getters and setters
     // -------------------------------------
@@ -466,6 +552,19 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
 
     public void setOnBottomNavigationBarObserver(OnBottomNavigationBar onBottomNavigationBar) {
         this.onBottomNavigationBarObserver = onBottomNavigationBar;
+    }
+
+    public void setOnLocationChangedObserver(OnLocationChanged onLocationChangedObserver){
+        this.onLocationChangedObserver =  onLocationChangedObserver;
+    }
+
+    public boolean isShowRate(){
+        return showRate;
+    }
+
+    public void setShowRate(boolean showRate){
+        Log.e(">>>>", "Pongo falso");
+        this.showRate = showRate;
     }
 
 
