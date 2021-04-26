@@ -96,6 +96,8 @@ public class SearchFragment extends Fragment implements MapsFragment.OnLocationC
 
         placesViewList.setAdapter(adapter);
 
+        adapter.clear();
+
         SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
         Gson gson = new Gson();
 

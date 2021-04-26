@@ -49,6 +49,10 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceView> {
 
     }
 
+    public void clear(){
+        places.clear();
+    }
+
     public void update(){
         this.notifyDataSetChanged();
     }
