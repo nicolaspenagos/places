@@ -10,7 +10,7 @@
     <string name="new__screen_marker_image">Marker image</string>
     <string name="new__screen_add_image">Add image</string>
     <string name="menu_map">Map</string>
-    <string name="menu_search">Buscar</string>
+    <string name="menu_search">Lista</string>
     <string name="menu_new">Nuevo</string>
     <string name="card_map_text">Sostenga el toque para ubicar el lugar del sitio de interés</string>
     <string name="card_button_text">Continuar</string>
@@ -22,4 +22,7 @@
     <string name="eye">Ojo</string>
     <string name="place">Lugar</string>
     <string name="star">Estrella</string>
+    <string name="sucess_place_msg">El lugar fue registrado y guardado exitosamente</string>
+    <string name="fill_all_msg">Por favor complete todos los campos para continuar</string>
+    <string name="real_time_distance_msg">Cambia de posición actual para activar la distancia en tiempo real</string>
 </resources>

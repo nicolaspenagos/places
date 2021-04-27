@@ -446,6 +446,13 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
                 preferences.edit().putString("places", jsonPlaces).apply();
                 bottomLayout.setVisibility(View.GONE);
                 currentRate = -1;
+                rateButton.setEnabled(false);
+                rateButton.setAlpha(0.5f);
+                star1ImageView.setImageResource(R.drawable.star);
+                star2ImageView.setImageResource(R.drawable.star);
+                star3ImageView.setImageResource(R.drawable.star);
+                star4ImageView.setImageResource(R.drawable.star);
+                star5ImageView.setImageResource(R.drawable.star);
 
 
                 break;

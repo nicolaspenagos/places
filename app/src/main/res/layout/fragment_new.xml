@@ -144,12 +144,12 @@
 
     <ImageView
         android:id="@+id/openCameraButton"
+        style="@style/AppOpenCameraImage"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginStart="36dp"
         android:layout_marginTop="8dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/addImageButton"
-        app:srcCompat="@drawable/camera" />
+        app:layout_constraintTop_toBottomOf="@+id/addImageButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

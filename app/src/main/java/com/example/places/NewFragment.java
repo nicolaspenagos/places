@@ -248,6 +248,7 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
                     places.add(place);
                     String jsonPlaces = gson.toJson(places);
                     preferences.edit().putString("places", jsonPlaces).apply();
+                    Toast.makeText(getContext(), R.string.sucess_place_msg, Toast.LENGTH_LONG).show();
                     emptyData();
 
                 }else{

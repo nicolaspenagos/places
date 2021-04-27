@@ -44,7 +44,6 @@ public class SearchFragment extends Fragment implements MapsFragment.OnLocationC
     // -------------------------------------
     // Views
     // -------------------------------------
-    private EditText placeNameEditText;
     private RecyclerView placesViewList;
     private LinearLayoutManager layoutManager;
     private PlaceAdapter adapter;
@@ -88,7 +87,6 @@ public class SearchFragment extends Fragment implements MapsFragment.OnLocationC
         // Inflate the layout for this fragment
         View root = inflater.inflate(R.layout.fragment_search, container, false);
 
-        placeNameEditText = root.findViewById(R.id.placeEditText);
         placesViewList = root.findViewById(R.id.placesViewList);
 
         layoutManager = new LinearLayoutManager(getContext());

@@ -55,6 +55,11 @@
     <style name="AppAddImage">
         <item name="srcCompat">@drawable/add_day</item>
     </style>
+    <!-- OPEN CAMERA BUTTON -->
+    <style name="AppOpenCameraImage">
+        <item name="srcCompat">@drawable/camera</item>
+    </style>
+
     <style name="AppMenuItem">
        <item name="iconTint">@color/yellow</item>
     </style>

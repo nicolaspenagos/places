@@ -54,6 +54,10 @@
     <style name="AppAddImage">
         <item name="srcCompat">@drawable/add</item>
     </style>
+    <!-- OPEN CAMERA BUTTON -->
+    <style name="AppOpenCameraImage">
+        <item name="srcCompat">@drawable/camera_night</item>
+    </style>
     <!-- BOTTOM LAYOUT -->
     <style name="AppBottomLayout">
         <item name="android:background">@drawable/top_layout_background</item>
