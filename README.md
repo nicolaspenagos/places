@@ -1,4 +1,4 @@
-# places
+# Places
 
 App that allows you to locate, store and rate places of interest anywhere in the world.
 
