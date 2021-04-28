@@ -175,6 +175,8 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
 
         gson = new Gson();
 
+
+
         return root;
 
     }
@@ -445,9 +447,13 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
             case R.id.cardButton:
 
                 String a = getResources().getString(R.string.geocoder_no_info);
-                if(addresses.size()>0){
-                    a = addresses.get(0).getAddressLine(0);
+
+                if(addresses != null){
+                    if(addresses.size()>0){
+                        a = addresses.get(0).getAddressLine(0);
+                    }
                 }
+
 
                 addressObserver.onAddressSet(a);
                 SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);

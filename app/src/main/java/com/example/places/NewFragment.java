@@ -206,6 +206,8 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
                 }
         );
 
+
+
         return root;
 
     }
@@ -244,12 +246,18 @@ public class NewFragment extends Fragment implements View.OnClickListener, MapsF
 
                 if(imageOk && addressOk && placeNameOk){
 
-                    Place place = new Place(placeNameEditText.getText().toString(), currentAddress, path, currentMarkerLatLng);
-                    places.add(place);
-                    String jsonPlaces = gson.toJson(places);
-                    preferences.edit().putString("places", jsonPlaces).apply();
-                    Toast.makeText(getContext(), R.string.sucess_place_msg, Toast.LENGTH_LONG).show();
-                    emptyData();
+
+                    if(currentMarkerLatLng!=null){
+                        Place place = new Place(placeNameEditText.getText().toString(), currentAddress, path, currentMarkerLatLng);
+                        places.add(place);
+                        String jsonPlaces = gson.toJson(places);
+                        preferences.edit().putString("places", jsonPlaces).apply();
+                        Toast.makeText(getContext(), R.string.sucess_place_msg, Toast.LENGTH_LONG).show();
+                        emptyData();
+                    }else{
+                        Toast.makeText(getContext(), getResources().getString(R.string.marker_error), Toast.LENGTH_LONG).show();
+                    }
+
 
                 }else{
                     Toast.makeText(getContext(), R.string.toast_fill_all, Toast.LENGTH_LONG).show();
