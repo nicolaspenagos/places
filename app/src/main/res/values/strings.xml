@@ -25,4 +25,5 @@
     <string name="sucess_place_msg">El lugar fue registrado y guardado exitosamente</string>
     <string name="fill_all_msg">Por favor complete todos los campos para continuar</string>
     <string name="real_time_distance_msg">Cambia de posición actual para activar la distancia en tiempo real</string>
+    <string name="geocoder_no_info">Sin información</string>
 </resources>

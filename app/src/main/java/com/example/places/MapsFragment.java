@@ -78,6 +78,7 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     private String provider;
     private int currentRate;
     private boolean showRate;
+    private boolean onMap;
 
     // -------------------------------------
     // Address assets
@@ -161,6 +162,7 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         currentRate = -1;
         rateButton.setEnabled(false);
         rateButton.setAlpha(0.5f);
+        onMap = true;
 
 
         if(!isVisible)
@@ -197,6 +199,7 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         isVisible = false;
         allowMarkers = false;
         showRate = true;
+        onMap = false;
 
         if(places!=null){
             for (int i=0;i<places.length;i++){
@@ -258,46 +261,49 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
 
             onLocationChangedObserver.onLocationChanged(location);
 
-            ratePlace = null;
-            double minDistance = Double.POSITIVE_INFINITY;
+            if(onMap){
 
-            for (int i=0; i<places.length; i++){
+                ratePlace = null;
+                double minDistance = Double.POSITIVE_INFINITY;
 
-                LatLng from = new LatLng(location.getLatitude(), location.getLongitude());
-                LatLng to = new LatLng(places[i].getMarker().latitude, places[i].getMarker().longitude);
+                for (int i=0; i<places.length; i++){
+
+                    LatLng from = new LatLng(location.getLatitude(), location.getLongitude());
+                    LatLng to = new LatLng(places[i].getMarker().latitude, places[i].getMarker().longitude);
 
 
-                double distanceInMeters = SphericalUtil.computeDistanceBetween(from, to);
+                    double distanceInMeters = SphericalUtil.computeDistanceBetween(from, to);
 
 
-                if(distanceInMeters<100){
-                    if(distanceInMeters<minDistance && ! places[i].isRated()){
+                    if(distanceInMeters<100){
+                        if(distanceInMeters<minDistance && ! places[i].isRated()){
 
-                        ratePlace = places[i];
-                        minDistance = distanceInMeters;
-                        Place finalRatePlace = ratePlace;
+                            ratePlace = places[i];
+                            minDistance = distanceInMeters;
+                            Place finalRatePlace = ratePlace;
 
+
+                        }
 
                     }
 
-                }
-
-
-            }
-
-
-
-            if(showRate){
-                if(ratePlace!=null){
-
-                    bottomLayout.setVisibility(View.VISIBLE);
-                    placeTextView.setText(ratePlace.getName());
-                    placeAddressTextView.setText(ratePlace.getAddress());
-                    closePlaceImageView.setImageBitmap(UtilImage.createImageFromPath(ratePlace.getPath()));
 
                 }
-            }
 
+
+
+                if(showRate){
+                    if(ratePlace!=null){
+
+                        bottomLayout.setVisibility(View.VISIBLE);
+                        placeTextView.setText(ratePlace.getName());
+                        placeAddressTextView.setText(ratePlace.getAddress());
+                        closePlaceImageView.setImageBitmap(UtilImage.createImageFromPath(ratePlace.getPath()));
+
+                    }
+                }
+
+            }
 
     }
 
@@ -338,9 +344,13 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
         for (int i=0; i<places.length; i++){
             
             Place currentPlace = places[i];
-            Marker marker = map.addMarker(new MarkerOptions().position(currentPlace.getMarker()));
-            marker.setTitle(currentPlace.getName());
-            marker.setSnippet(currentPlace.getAddress());
+
+            if(currentPlace.getMarker()!=null){
+                Marker marker = map.addMarker(new MarkerOptions().position(currentPlace.getMarker()));
+                marker.setTitle(currentPlace.getName());
+                marker.setSnippet(currentPlace.getAddress());
+            }
+
 
         }
 
@@ -376,13 +386,20 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
 
                         try {
 
+                            String address = getResources().getString(R.string.geocoder_no_info);
                             addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
-                            String address = addresses.get(0).getAddressLine(0);
 
+
+                            if(addresses.size()>0){
+                                address = addresses.get(0).getAddressLine(0);
+                            }
+
+
+                            String finalAddress = address;
                             getActivity().runOnUiThread(()->{
 
                                 currentPlaceMarker.hideInfoWindow();
-                                currentPlaceMarker.setSnippet(address);
+                                currentPlaceMarker.setSnippet(finalAddress);
                                 currentPlaceMarker.showInfoWindow();
                                 addressObserver.onMarkerSet(currentPlaceMarker);
 
@@ -427,9 +444,14 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
 
             case R.id.cardButton:
 
-                addressObserver.onAddressSet(addresses.get(0).getAddressLine(0));
+                String a = getResources().getString(R.string.geocoder_no_info);
+                if(addresses.size()>0){
+                    a = addresses.get(0).getAddressLine(0);
+                }
+
+                addressObserver.onAddressSet(a);
                 SharedPreferences preferences = getContext().getSharedPreferences("NewFragment", Context.MODE_PRIVATE);
-                preferences.edit().putString("address", addresses.get(0).getAddressLine(0)).apply();
+                preferences.edit().putString("address", a).apply();
                 onBottomNavigationBarObserver.goToNew();
 
                 break;
@@ -570,7 +592,6 @@ public class MapsFragment extends Fragment implements LocationListener, OnMapRea
     }
 
     public void setShowRate(boolean showRate){
-        Log.e(">>>>", "Pongo falso");
         this.showRate = showRate;
     }
 

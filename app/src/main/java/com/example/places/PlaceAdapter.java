@@ -79,7 +79,7 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceView> {
         Place place = places.get(position);
 
         holder.getPlaceNameTextView().setText(place.getName());
-        holder.getPlacePicImageView().setImageBitmap(UtilImage.createImageFromPath(place.getPath()));
+        holder.getPlacePicImageView().setImageBitmap(UtilImage.scaleBitmap(UtilImage.createImageFromPath(place.getPath())));
         String rate = "Sin calificar aún";
         if(place.getRate()>0){
             rate = ""+place.getRate();

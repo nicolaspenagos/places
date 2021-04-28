@@ -106,7 +106,8 @@ public class HomeActivity extends AppCompatActivity implements NewFragment.OnMap
 
         );
 
-        showFragment(newFragment);
+        navigator.setSelectedItemId(R.id.mapItem);
+        showFragment(mapsFragment);
 
     }
 

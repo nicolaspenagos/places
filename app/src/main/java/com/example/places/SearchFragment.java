@@ -38,9 +38,6 @@ import com.google.maps.android.SphericalUtil;
 public class SearchFragment extends Fragment implements MapsFragment.OnLocationChanged{
 
 
-
-
-
     // -------------------------------------
     // Views
     // -------------------------------------
